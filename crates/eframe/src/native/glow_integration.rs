@@ -1,8 +1,9 @@
 use std::{cell::RefCell, rc::Rc, sync::Arc, time::Instant};
 
 use glutin::{
+    context::NotCurrentGlContext,
     display::GetGlDisplay,
-    prelude::{GlDisplay, NotCurrentGlContextSurfaceAccessor, PossiblyCurrentGlContext},
+    prelude::{GlDisplay, PossiblyCurrentGlContext},
     surface::GlSurface,
 };
 use raw_window_handle::{HasRawDisplayHandle as _, HasRawWindowHandle as _};
@@ -32,18 +33,6 @@ use super::{
     winit_integration::{EventResult, UserEvent, WinitApp},
     *,
 };
-
-// Note: that the current Glutin API design tightly couples the GL context with
-// the Window which means it's not practically possible to just destroy the
-// window and re-create a new window while continuing to use the same GL context.
-//
-// For now this means it's not possible to support Android as well as we can with
-// wgpu because we're basically forced to destroy and recreate _everything_ when
-// the application suspends and resumes.
-//
-// There is work in progress to improve the Glutin API so it has a separate Surface
-// API that would allow us to just destroy a Window/Surface when suspending, see:
-// https://github.com/rust-windowing/glutin/pull/1435
 
 // ----------------------------------------------------------------------------
 // Types:
@@ -402,7 +391,7 @@ impl WinitApp for GlowWinitApp {
     fn on_event(
         &mut self,
         event_loop: &EventLoopWindowTarget<UserEvent>,
-        event: &winit::event::Event<'_, UserEvent>,
+        event: &winit::event::Event<UserEvent>,
     ) -> Result<EventResult> {
         crate::profile_function!(winit_integration::short_event_description(event));
 
@@ -430,15 +419,6 @@ impl WinitApp for GlowWinitApp {
             winit::event::Event::Suspended => {
                 if let Some(running) = &mut self.running {
                     running.glutin.borrow_mut().on_suspend()?;
-                }
-                EventResult::Wait
-            }
-
-            winit::event::Event::MainEventsCleared => {
-                if let Some(running) = &self.running {
-                    if let Err(err) = running.glutin.borrow_mut().on_resume(event_loop) {
-                        log::warn!("on_resume failed {err}");
-                    }
                 }
                 EventResult::Wait
             }
@@ -664,7 +644,7 @@ impl GlowWinitRunning {
     fn on_window_event(
         &mut self,
         window_id: WindowId,
-        event: &winit::event::WindowEvent<'_>,
+        event: &winit::event::WindowEvent,
     ) -> EventResult {
         crate::profile_function!(egui_winit::short_window_event_description(event));
 
@@ -703,10 +683,9 @@ impl GlowWinitRunning {
                 }
             }
 
-            winit::event::WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
-                if let Some(viewport_id) = viewport_id {
+            winit::event::WindowEvent::ScaleFactorChanged { .. } => {
+                if viewport_id.is_some() {
                     repaint_asap = true;
-                    glutin.resize(viewport_id, **new_inner_size);
                 }
             }
 
@@ -821,7 +800,7 @@ impl GlutinWindowContext {
         // Create GL display. This may probably create a window too on most platforms. Definitely on `MS windows`. Never on Android.
         let display_builder = glutin_winit::DisplayBuilder::new()
             // we might want to expose this option to users in the future. maybe using an env var or using native_options.
-            .with_preference(glutin_winit::ApiPrefence::FallbackEgl) // https://github.com/emilk/egui/issues/2520#issuecomment-1367841150
+            .with_preference(glutin_winit::ApiPreference::FallbackEgl) // https://github.com/emilk/egui/issues/2520#issuecomment-1367841150
             .with_window_builder(Some(create_winit_window_builder(
                 egui_ctx,
                 event_loop,

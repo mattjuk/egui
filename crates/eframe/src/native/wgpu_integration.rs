@@ -357,7 +357,7 @@ impl WinitApp for WgpuWinitApp {
     fn on_event(
         &mut self,
         event_loop: &EventLoopWindowTarget<UserEvent>,
-        event: &winit::event::Event<'_, UserEvent>,
+        event: &winit::event::Event<UserEvent>,
     ) -> Result<EventResult> {
         crate::profile_function!(winit_integration::short_event_description(event));
 
@@ -654,7 +654,7 @@ impl WgpuWinitRunning {
     fn on_window_event(
         &mut self,
         window_id: WindowId,
-        event: &winit::event::WindowEvent<'_>,
+        event: &winit::event::WindowEvent,
     ) -> EventResult {
         crate::profile_function!(egui_winit::short_window_event_description(event));
 
@@ -703,16 +703,8 @@ impl WgpuWinitRunning {
                 }
             }
 
-            winit::event::WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
-                use std::num::NonZeroU32;
-                if let (Some(width), Some(height), Some(viewport_id)) = (
-                    NonZeroU32::new(new_inner_size.width),
-                    NonZeroU32::new(new_inner_size.height),
-                    viewport_id,
-                ) {
-                    repaint_asap = true;
-                    shared.painter.on_window_resized(viewport_id, width, height);
-                }
+            winit::event::WindowEvent::ScaleFactorChanged { .. } => {
+                repaint_asap = true;
             }
 
             winit::event::WindowEvent::CloseRequested => {
