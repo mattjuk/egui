@@ -49,9 +49,9 @@ egui = { version = "0.24.0", path = "../egui", default-features = false, feature
 ] }
 
 bytemuck = "1.7"
-glow = "0.12"
+glow = "0.13"
 log = { version = "0.4", features = ["std"] }
-memoffset = "0.7"
+memoffset = "0.9"
 
 #! ### Optional dependencies
 ## Enable this when generating docs.

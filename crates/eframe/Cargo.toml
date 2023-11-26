@@ -112,7 +112,7 @@ thiserror.workspace = true
 document-features = { version = "0.2", optional = true }
 
 egui_glow = { version = "0.24.0", path = "../egui_glow", optional = true, default-features = false }
-glow = { version = "0.12", optional = true }
+glow = { version = "0.13", optional = true }
 ron = { version = "0.8", optional = true, features = ["integer128"] }
 serde = { version = "1", optional = true, features = ["derive"] }
 
@@ -145,7 +145,7 @@ wgpu = { workspace = true, optional = true }
 
 # mac:
 [target.'cfg(any(target_os = "macos"))'.dependencies]
-cocoa = "0.24.1" # Stuck on old version until we update to winit 0.29
+cocoa = "0.25" # Stuck on old version until we update to winit 0.29
 objc = "0.2.7"
 
 # windows:
