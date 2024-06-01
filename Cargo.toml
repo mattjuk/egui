@@ -72,8 +72,8 @@ bytemuck = "1.7.2"
 criterion = { version = "0.5.1", default-features = false }
 document-features = " 0.2.8"
 glow = "0.13"
-glutin = "0.31"
-glutin-winit = "0.4"
+glutin = { git = "https://github.com/mattjuk/glutin.git", branch = "winit-0.30" }
+glutin-winit = { git = "https://github.com/mattjuk/glutin.git", branch = "winit-0.30" }
 image = { version = "0.25", default-features = false }
 log = { version = "0.4", features = ["std"] }
 nohash-hasher = "0.2"
